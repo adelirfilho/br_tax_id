@@ -21,7 +21,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-br_tax_id = "0.1.0"
+br_tax_id = "0.1.1"
 ```
 
 Or simply run:
