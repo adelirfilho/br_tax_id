@@ -1,0 +1,20 @@
+[package]
+name = "br_tax_id"
+version = "0.1.0"
+edition = "2024"
+authors = ["Adelir Filho <adelirfilho@protonmail.com>"]
+description = "Extremely fast, zero-allocation, and no_std-compatible CPF and CNPJ validator."
+repository = "https://github.com/adelirfilho/br-tax-id"
+license = "MIT OR Apache-2.0"
+keywords = ["cpf", "cnpj", "brazil", "validation", "no_std"]
+categories = ["no-std", "value-formatting", "parser-implementations"]
+
+[dependencies]
+# No dependencies! Keeping the project shielded from third-party vulnerabilities.
+
+[profile.release]
+opt-level = 3        # Maximum speed optimization
+lto = true           # Link Time Optimization to remove dead code
+codegen-units = 1    # More aggressive optimization across all compilation units
+panic = "abort"      # Reduces binary size by removing stack unwinding
+strip = true         # Remove debug symbols from the final binary to make it tiny
