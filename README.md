@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/br_tax_id.svg)](https://crates.io/crates/br_tax_id)
 [![Documentation](https://docs.rs/br_tax_id/badge.svg)](https://docs.rs/br_tax_id)
-[![License](https://img.shields.io/crates/l/br_tax_id.svg)](https://crates.io/crates/br_tax_id)
+[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](https://crates.io/crates/br_tax_id)
 
 Extremely fast, zero-allocation, and `no_std`-compatible CPF and CNPJ validator for Rust.
 
@@ -10,6 +10,7 @@ Extremely fast, zero-allocation, and `no_std`-compatible CPF and CNPJ validator 
 
 - 🚀 **Blazing Fast**: Designed to execute with minimal CPU cycles.
 - 🛡️ **Zero Allocation**: Fully `#![no_std]` compatible. Uses fixed stack-allocated arrays ensuring no heap memory is dynamically allocated.
+- 🔄 **Thread-Safe & Reentrant**: Completely stateless and free of global shared data, making it inherently safe for concurrent execution and multi-tasking environments (ideal for multi-threaded apps and `no_std` RTOS).
 - 🔒 **Security First**: Built-in DoS (Denial of Service) mitigation prevents CPU exhaustion by instantly rejecting input strings exceeding 50 bytes.
 - 🧹 **Flexible Input**: Automatically ignores standard formatting characters like `.`, `-`, and `/`, focusing only on numeric ASCII characters.
 - 📦 **Zero Dependencies**: Keeps your dependency tree completely clean, shielding your project from third-party vulnerabilities.
@@ -40,7 +41,7 @@ fn main() {
     // Validating a formatted CPF
     assert_eq!(validate_tax_id("529.982.247-25"), Some(TaxIdType::Cpf));
 
-    // Validating an unformatted CNPJ
+    // Validating an unformattedCNPJ
     assert_eq!(validate_tax_id("11222333000181"), Some(TaxIdType::Cnpj));
 
     // Invalid sequences or wrong verification digits return None
