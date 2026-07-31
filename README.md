@@ -21,7 +21,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-br_tax_id = "0.1.2"
+br_tax_id = "0.1.3"
 ```
 
 Or simply run:
@@ -34,18 +34,39 @@ cargo add br_tax_id
 
 The library provides a simple and ergonomic API through the `validate_tax_id` function, returning an `Option<TaxIdType>`.
 
+## 1. Quick Validation (Using .is_some() / .is_none())
+
+Ideal when you only need to check if the document is valid, without caring whether it is a CPF or a CNPJ.
+
+```rust
+use br_tax_id as br;
+
+fn main() {
+    let document = "529.982.247-25";
+
+    if br::validate_tax_id(document).is_some() {
+        println!("Valid document!");
+    } else {
+        println!("Invalid document!");
+    }
+}
+```
+
+## 2. Detailed Validation (Using match or if let)
+
+Use this when you need to know exactly whether the document is a CPF or a CNPJ, or if it's invalid.
+
 ```rust
 use br_tax_id::{validate_tax_id, TaxIdType};
 
 fn main() {
-    // Validating a formatted CPF
-    assert_eq!(validate_tax_id("529.982.247-25"), Some(TaxIdType::Cpf));
+    let document = "11.222.333/0001-81";
 
-    // Validating an unformattedCNPJ
-    assert_eq!(validate_tax_id("11222333000181"), Some(TaxIdType::Cnpj));
-
-    // Invalid sequences or wrong verification digits return None
-    assert_eq!(validate_tax_id("000.000.000-00"), None);
+    match validate_tax_id(document) {
+        Some(TaxIdType::Cpf) => println!("Processed a valid CPF."),
+        Some(TaxIdType::Cnpj) => println!("Processed a valid CNPJ."),
+        _ => println!("Validation failed: invalid tax ID."),
+    }
 }
 ```
 
