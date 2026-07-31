@@ -1,6 +1,6 @@
 [package]
 name = "br_tax_id"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 authors = ["Adelir Filho <adelirfilho@protonmail.com>"]
 description = "Extremely fast, zero-allocation, and no_std-compatible CPF and CNPJ validator."

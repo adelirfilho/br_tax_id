@@ -39,11 +39,11 @@ pub fn validate_tax_id(tax_id: &str) -> Option<TaxIdType> {
         return None;
     }
 
-    let bytes = tax_id.as_bytes();
-
     // Stack-allocated fixed array ensuring zero heap allocations.
     let mut digits = [0u8; 14];
     let mut count = 0;
+
+    let bytes = tax_id.as_bytes();
 
     for &b in bytes {
         match b {
@@ -55,24 +55,12 @@ pub fn validate_tax_id(tax_id: &str) -> Option<TaxIdType> {
                 digits[count] = b - b'0';
                 count += 1;
             }
-            // Delimitadores aceitos (ignora sem falhar)
+            // Accepted delimiters (ignored without failing)
             b'.' | b'-' | b'/' | b' ' => continue,
             // Fail-secure: any other character immediately rejects the input
             _ => return None,
         }
     }
-
-    // // Filter numeric ASCII characters, skipping non-digit characters.
-    // for ch in tax_id.chars() {
-    //     if let Some(digit) = ch.to_digit(10) {
-    //         if count >= 14 {
-    //             // Exceeds maximum allowed tax ID digits (CNPJ is max 14).
-    //             return None;
-    //         }
-    //         digits[count] = digit as u8;
-    //         count += 1;
-    //     }
-    // }
 
     match count {
         11 if validate_cpf(&digits[0..11]) => Some(TaxIdType::Cpf),
