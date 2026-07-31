@@ -39,6 +39,8 @@ pub fn validate_tax_id(tax_id: &str) -> Option<TaxIdType> {
         return None;
     }
 
+    let bytes = tax_id.as_bytes();
+
     // Stack-allocated fixed array ensuring zero heap allocations.
     let mut digits = [0u8; 14];
     let mut count = 0;
