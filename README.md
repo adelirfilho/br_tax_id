@@ -8,12 +8,13 @@ Extremely fast, zero-allocation, and `no_std`-compatible CPF and CNPJ validator 
 
 ## ✨ Features
 
-- 🚀 **Blazing Fast**: Designed to execute with minimal CPU cycles.
-- 🛡️ **Zero Allocation**: Fully `#![no_std]` compatible. Uses fixed stack-allocated arrays ensuring no heap memory is dynamically allocated.
-- 🔄 **Thread-Safe & Reentrant**: Completely stateless and free of global shared data, making it inherently safe for concurrent execution and multi-tasking environments (ideal for multi-threaded apps and `no_std` RTOS).
-- 🔒 **Security First**: Built-in DoS (Denial of Service) mitigation prevents CPU exhaustion by instantly rejecting input strings exceeding 50 bytes.
-- 🧹 **Flexible Input**: Automatically ignores standard formatting characters like `.`, `-`, and `/`, focusing only on numeric ASCII characters.
-- 📦 **Zero Dependencies**: Keeps your dependency tree completely clean, shielding your project from third-party vulnerabilities.
+- 🚀 **Blazing Fast**: Direct byte-slice parsing (`as_bytes()`) avoids UTF-8 decoding overhead. Check-digit algorithms use branchless ALU math for maximum CPU performance.
+- 🛡️ **Zero Allocation**: Fully `#![no_std]` compatible. Operates entirely on stack memory using fixed-size byte buffers.
+- 🔒 **Security First (Fail-Secure)**: 
+  - **Strict Allowlisting**: Rejects any character outside valid ASCII digits (`0-9`) and expected delimiters (`.`, `-`, `/`, ` `) to prevent downstream injection vulnerabilities.
+  - **DoS Mitigation**: Instantly drops input strings exceeding 50 bytes to eliminate CPU exhaustion vectors.
+- 🔄 **Thread-Safe & Reentrant**: Completely stateless and free of global shared state, inherently thread-safe for multi-threading and `no_std` RTOS setups.
+- 📦 **Zero Dependencies**: Clean dependency graph shielding your project from supply-chain risks.
 
 ## 📦 Installation
 
@@ -21,7 +22,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-br_tax_id = "0.1.3"
+br_tax_id = "0.1.4"
 ```
 
 Or simply run:
@@ -47,7 +48,7 @@ fn main() {
     if br::validate_tax_id(document).is_some() {
         println!("Valid document!");
     } else {
-        println!("Invalid document!");
+        println!("Invalid document or unexpected payload.");
     }
 }
 ```
@@ -65,7 +66,7 @@ fn main() {
     match validate_tax_id(document) {
         Some(TaxIdType::Cpf) => println!("Processed a valid CPF."),
         Some(TaxIdType::Cnpj) => println!("Processed a valid CNPJ."),
-        _ => println!("Validation failed: invalid tax ID."),
+        _ => println!("Invalid document or unexpected payload."),
     }
 }
 ```

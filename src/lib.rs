@@ -43,17 +43,34 @@ pub fn validate_tax_id(tax_id: &str) -> Option<TaxIdType> {
     let mut digits = [0u8; 14];
     let mut count = 0;
 
-    // Filter numeric ASCII characters, skipping non-digit characters.
-    for ch in tax_id.chars() {
-        if let Some(digit) = ch.to_digit(10) {
-            if count >= 14 {
-                // Exceeds maximum allowed tax ID digits (CNPJ is max 14).
-                return None;
+    for &b in bytes {
+        match b {
+            b'0'..=b'9' => {
+                if count >= 14 {
+                    // Exceeds maximum allowed tax ID digits (CNPJ is max 14).
+                    return None;
+                }
+                digits[count] = b - b'0';
+                count += 1;
             }
-            digits[count] = digit as u8;
-            count += 1;
+            // Delimitadores aceitos (ignora sem falhar)
+            b'.' | b'-' | b'/' | b' ' => continue,
+            // Fail-secure: any other character immediately rejects the input
+            _ => return None,
         }
     }
+
+    // // Filter numeric ASCII characters, skipping non-digit characters.
+    // for ch in tax_id.chars() {
+    //     if let Some(digit) = ch.to_digit(10) {
+    //         if count >= 14 {
+    //             // Exceeds maximum allowed tax ID digits (CNPJ is max 14).
+    //             return None;
+    //         }
+    //         digits[count] = digit as u8;
+    //         count += 1;
+    //     }
+    // }
 
     match count {
         11 if validate_cpf(&digits[0..11]) => Some(TaxIdType::Cpf),
@@ -80,8 +97,12 @@ fn validate_cpf(digits: &[u8]) -> bool {
             })
             .sum();
 
-        let rem = (sum * 10) % 11;
-        if rem == 10 { 0 } else { rem as u8 }
+        let rem = sum % 11;
+        if rem < 2 {
+            0
+        } else {
+            (11 - rem) as u8
+        }
     };
 
     let d1 = calc_digit(&digits[0..9], 10);
@@ -106,7 +127,11 @@ fn validate_cnpj(digits: &[u8]) -> bool {
             .sum();
 
         let rem = sum % 11;
-        if rem < 2 { 0 } else { (11 - rem) as u8 }
+        if rem < 2 {
+            0
+        } else {
+            (11 - rem) as u8
+        }
     };
 
     // Constant weighting factors for CNPJ calculation algorithms.
@@ -183,5 +208,14 @@ mod tests {
         assert_eq!(validate_tax_id("invalid_input_payload"), None);
         assert_eq!(validate_tax_id(""), None);
         assert_eq!(validate_tax_id("123.abc"), None);
+    }
+
+    #[test]
+    fn test_strict_validation_rejects_junk_or_payloads() {
+        // Payloads containing mixed invalid characters must return None
+        assert_eq!(validate_tax_id("529.982.247-25<script>"), None);
+        assert_eq!(validate_tax_id("529.982.247-25-abc"), None);
+        assert_eq!(validate_tax_id("529a982b247c25"), None);
+        assert_eq!(validate_tax_id("11.222.333/0001-81\0"), None);
     }
 }
