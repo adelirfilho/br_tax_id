@@ -13,7 +13,8 @@ Extremely fast, zero-allocation, and `no_std`-compatible CPF and CNPJ validator 
 - 🔒 **Security First (Fail-Secure)**: 
   - **Strict Allowlisting**: Rejects any character outside valid ASCII digits (`0-9`) and expected delimiters (`.`, `-`, `/`, ` `) to prevent downstream injection vulnerabilities.
   - **DoS Mitigation**: Instantly drops input strings exceeding 50 bytes to eliminate CPU exhaustion vectors.
-- 🔄 **Thread-Safe & Reentrant**: Completely stateless and free of global shared state, inherently thread-safe for multi-threading and `no_std` RTOS setups.
+- 🎯 **Granular Observability**: Returns detailed `Result<TaxIdType, ValidationError>` variants, allowing consuming systems to distinguish between simple user typos and malicious injection/DoS attempts.
+- 🔄 **Idiomatic Rust**: Implements `FromStr`, allowing native `.parse::<TaxIdType>()` calls.
 - 📦 **Zero Dependencies**: Clean dependency graph shielding your project from supply-chain risks.
 
 ## 📦 Installation
@@ -22,7 +23,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-br_tax_id = "0.1.6"
+br_tax_id = "0.2.0"
 ```
 
 Or simply run:
@@ -33,51 +34,84 @@ cargo add br_tax_id
 
 ## 🛠️ Usage
 
-The library provides a simple and ergonomic API through the `validate_tax_id` function, returning an `Option<TaxIdType>`.
+## 1. Idiomatic Parsing (Using `.parse()`)
 
-## 1. Quick Validation (Using .is_some() / .is_none())
-
-Ideal when you only need to check if the document is valid, without caring whether it is a CPF or a CNPJ.
+By implementing `FromStr`, you can parse strings directly into `TaxIdType`.
 
 ```rust
-use br_tax_id as br;
+use br_tax_id::{TaxIdType, ValidationError};
 
-fn main() {
+fn main() -> Result<(), ValidationError> {
     let document = "529.982.247-25";
+    let tax_id: TaxIdType = document.parse()?;
 
-    if br::validate_tax_id(document).is_some() {
-        println!("Valid document!");
-    } else {
-        println!("Invalid document or unexpected payload.");
+    match tax_id {
+        TaxIdType::Cpf => println!("Valid CPF detected!"),
+        TaxIdType::Cnpj => println!("Valid CNPJ detected!"),
     }
+
+    Ok(())
 }
 ```
 
-## 2. Detailed Validation (Using match or if let)
+## 2. Fast Validation Check (Using `.is_ok()`)
 
-Use this when you need to know exactly whether the document is a CPF or a CNPJ, or if it's invalid.
+Ideal when you only need to verify validity without inspecting the exact error or document type.
 
 ```rust
-use br_tax_id::{validate_tax_id, TaxIdType};
+use br_tax_id::validate_tax_id;
 
 fn main() {
     let document = "11.222.333/0001-81";
 
-    match validate_tax_id(document) {
-        Some(TaxIdType::Cpf) => println!("Processed a valid CPF."),
-        Some(TaxIdType::Cnpj) => println!("Processed a valid CNPJ."),
-        _ => println!("Invalid document or unexpected payload."),
+    if validate_tax_id(document).is_ok() {
+        println!("Valid document!");
+    } else {
+        println!("Invalid document.");
+    }
+}
+```
+## 3. Granular Error Handling & Security Telemetry
+
+Distinguish between malicious payloads, character injection, and simple bad checksums.
+
+```rust
+use br_tax_id::{validate_tax_id, TaxIdType, ValidationError};
+
+fn main() {
+    let payload = "529.982.247-25<script>";
+
+    match validate_tax_id(payload) {
+        Ok(TaxIdType::Cpf) => println!("Processed CPF."),
+        Ok(TaxIdType::Cnpj) => println!("Processed CNPJ."),
+        Err(ValidationError::PayloadTooLarge) => {
+            eprintln!("SECURITY ALERT: Possible DoS attempt (oversized payload).");
+        }
+        Err(ValidationError::InvalidCharacters) => {
+            eprintln!("SECURITY ALERT: Invalid characters detected in input.");
+        }
+        Err(ValidationError::InvalidChecksum) => {
+            println!("User typed an incorrect document number.");
+        }
+        Err(ValidationError::InvalidLength) => {
+            println!("Document length is wrong.");
+        }
     }
 }
 ```
 
 ## ⚙️ Optimization & Performance
 
-This crate is built for speed and minimal binary size. If you are building an application with this library, it's recommended to apply aggressive optimization profiles. The project natively supports:
+This crate is built for speed and minimal binary size. If you are building an application with this library, it's recommended to apply aggressive optimization profiles in your `Cargo.toml`:
 
-- **LTO (Link Time Optimization)** to remove dead code.
-- **`panic = "abort"`** to reduce binary size by skipping stack unwinding.
-- **Stripped binaries** to eliminate debug symbols.
+```toml
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+```
 
 ## 📝 License
 
