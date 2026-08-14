@@ -23,7 +23,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-br_tax_id = "0.2.0"
+br_tax_id = "0.2.1"
 ```
 
 Or simply run:
@@ -59,12 +59,12 @@ fn main() -> Result<(), ValidationError> {
 Ideal when you only need to verify validity without inspecting the exact error or document type.
 
 ```rust
-use br_tax_id::validate_tax_id;
+use br_tax_id as br;
 
 fn main() {
     let document = "11.222.333/0001-81";
 
-    if validate_tax_id(document).is_ok() {
+    if br::validate_tax_id(document).is_ok() {
         println!("Valid document!");
     } else {
         println!("Invalid document.");
@@ -99,7 +99,6 @@ fn main() {
     }
 }
 ```
-
 ## ⚙️ Optimization & Performance
 
 This crate is built for speed and minimal binary size. If you are building an application with this library, it's recommended to apply aggressive optimization profiles in your `Cargo.toml`:
