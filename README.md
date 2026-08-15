@@ -112,6 +112,17 @@ panic = "abort"
 strip = true
 ```
 
+## 🛡️ Security & Resilience Testing
+
+This crate is subjected to continuous fuzz testing using `cargo-fuzz` and `libFuzzer` to ensure memory safety and robustness against unexpected inputs. 
+
+The `fuzz/` directory contains our fuzzing targets, which continuously bombard the `validate_tax_id` function with mutated payloads. We verify that:
+- No input combination triggers an unexpected `panic!`.
+- Memory usage remains stable (stack-only).
+- Fail-secure logic remains consistent across all mutations.
+
+Our current testing infrastructure ensures that even highly obfuscated, malformed, or over-sized payloads are handled gracefully without compromising the host system.
+
 ## 📝 License
 
 This project is dual-licensed under either the [MIT License](https://opensource.org/licenses/MIT) or the [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0), at your option.
